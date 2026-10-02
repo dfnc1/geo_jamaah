@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import '../../data/mock_data.dart';
 import '../../models/pengguna.dart';
 import '../../models/presensi.dart';
-import '../../models/izin.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
+import 'izin_musyrif_screen.dart';
+import 'monitoring_screen.dart';
 
 class MusyrifHomeScreen extends StatefulWidget {
   const MusyrifHomeScreen({super.key});
@@ -38,8 +39,8 @@ class _MusyrifHomeScreenState extends State<MusyrifHomeScreen> {
   Widget build(BuildContext context) {
     final pages = [
       _buildDashboard(),
-      _MonitoringTab(idMusyrif: _idMusyrif),
-      _IzinMusyrifTab(idMusyrif: _idMusyrif),
+      MonitoringScreen(idMusyrif: _idMusyrif),
+      IzinMusyrifScreen(idMusyrif: _idMusyrif),
       _RekapTab(idMusyrif: _idMusyrif),
       _buildProfil(),
     ];
@@ -102,12 +103,12 @@ class _MusyrifHomeScreenState extends State<MusyrifHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("Assalamu'alaikum,",
-                        style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
                     Text(_namaMusyrif,
                         style: const TextStyle(
                             color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                     Text('Musyrif · ${myMhs.length} Mahasantri',
-                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
                   ],
                 ),
               ),
@@ -184,7 +185,7 @@ class _MusyrifHomeScreenState extends State<MusyrifHomeScreen> {
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: AppTheme.primary.withOpacity(0.1),
+                          backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                           child: Text(mhs?.nama.substring(0, 1) ?? '?',
                               style: const TextStyle(
                                   color: AppTheme.primary, fontWeight: FontWeight.w700)),
@@ -221,7 +222,7 @@ class _MusyrifHomeScreenState extends State<MusyrifHomeScreen> {
                 children: [
                   CircleAvatar(
                     radius: 36,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     child: const Icon(Icons.supervisor_account, color: Colors.white, size: 40),
                   ),
                   const SizedBox(width: 16),
@@ -232,9 +233,9 @@ class _MusyrifHomeScreenState extends State<MusyrifHomeScreen> {
                           style: const TextStyle(
                               color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                       Text(_user.username,
-                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
                       Text('Musyrif',
-                          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
                     ],
                   ),
                 ],
@@ -267,360 +268,7 @@ class _MusyrifHomeScreenState extends State<MusyrifHomeScreen> {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MONITORING TAB
-// ══════════════════════════════════════════════════════════════════════════════
-class _MonitoringTab extends StatefulWidget {
-  final String idMusyrif;
-  const _MonitoringTab({required this.idMusyrif});
-
-  @override
-  State<_MonitoringTab> createState() => _MonitoringTabState();
-}
-
-class _MonitoringTabState extends State<_MonitoringTab> {
-  String _filterStatus = 'Semua';
-  String _filterSholat = 'Semua';
-  final _statusOptions = ['Semua', 'Hadir', 'Izin', 'Tidak Hadir'];
-  final _sholatOptions = ['Semua', 'Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'];
-
-  List<Presensi> get _filtered {
-    final myMhs = MockData.getMahasantriByMusyrif(widget.idMusyrif);
-    var list = MockData.presensi.where((p) => myMhs.any((m) => m.nim == p.nim)).toList();
-
-    if (_filterStatus != 'Semua') {
-      final st = switch (_filterStatus) {
-        'Hadir' => StatusPresensi.hadir,
-        'Izin' => StatusPresensi.izin,
-        _ => StatusPresensi.tidakHadir,
-      };
-      list = list.where((p) => p.statusPresensi == st).toList();
-    }
-    if (_filterSholat != 'Semua') {
-      final jadwal = MockData.jadwalSholat.firstWhere((j) => j.namaSholat == _filterSholat);
-      list = list.where((p) => p.idJadwal == jadwal.idJadwal).toList();
-    }
-    return list;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const GeoAppBar(title: 'Monitoring Presensi', showBack: false),
-      body: Column(
-        children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      const Text('Status: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
-                      ..._statusOptions.map((s) {
-                        final sel = _filterStatus == s;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: GestureDetector(
-                            onTap: () => setState(() => _filterStatus = s),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: sel ? AppTheme.primary : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: sel ? AppTheme.primary : Colors.grey[300]!),
-                              ),
-                              child: Text(s, style: TextStyle(fontSize: 12, color: sel ? Colors.white : AppTheme.textPrimary, fontWeight: FontWeight.w600)),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      const Text('Shalat: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
-                      ..._sholatOptions.map((s) {
-                        final sel = _filterSholat == s;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: GestureDetector(
-                            onTap: () => setState(() => _filterSholat = s),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: sel ? const Color(0xFF1976D2) : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: sel ? const Color(0xFF1976D2) : Colors.grey[300]!),
-                              ),
-                              child: Text(s, style: TextStyle(fontSize: 12, color: sel ? Colors.white : AppTheme.textPrimary, fontWeight: FontWeight.w600)),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Text('${_filtered.length} data ditemukan',
-                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-          ),
-          Expanded(
-            child: _filtered.isEmpty
-                ? const Center(child: Text('Tidak ada data', style: TextStyle(color: AppTheme.textSecondary)))
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, i) {
-                      final p = _filtered[i];
-                      final mhs = MockData.getMahasantriByNim(p.nim);
-                      final jadwal = MockData.getJadwalById(p.idJadwal);
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundColor: AppTheme.primary.withOpacity(0.1),
-                                child: Text(mhs?.nama.substring(0, 1) ?? '?',
-                                    style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(mhs?.nama ?? '-',
-                                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                                    Text('${mhs?.nim ?? '-'} · Kamar ${mhs?.kamar ?? '-'}',
-                                        style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-                                    Text('${jadwal?.namaSholat ?? '-'} · ${p.waktuPresensi.hour.toString().padLeft(2, '0')}:${p.waktuPresensi.minute.toString().padLeft(2, '0')}',
-                                        style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-                                  ],
-                                ),
-                              ),
-                              StatusBadgePresensi(status: p.statusPresensi, small: true),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// IZIN MUSYRIF TAB
-// ══════════════════════════════════════════════════════════════════════════════
-class _IzinMusyrifTab extends StatefulWidget {
-  final String idMusyrif;
-  const _IzinMusyrifTab({required this.idMusyrif});
-
-  @override
-  State<_IzinMusyrifTab> createState() => _IzinMusyrifTabState();
-}
-
-class _IzinMusyrifTabState extends State<_IzinMusyrifTab> {
-  String _filterStatus = 'Semua';
-
-  List<Izin> get _filtered {
-    final all = MockData.getIzinByMusyrif(widget.idMusyrif);
-    if (_filterStatus == 'Semua') return all;
-    final st = switch (_filterStatus) {
-      'Pending' => StatusPersetujuan.pending,
-      'Disetujui' => StatusPersetujuan.disetujui,
-      _ => StatusPersetujuan.ditolak,
-    };
-    return all.where((i) => i.statusPersetujuan == st).toList();
-  }
-
-  void _updateIzin(Izin izin, StatusPersetujuan status) {
-    setState(() => izin.statusPersetujuan = status);
-    final label = status == StatusPersetujuan.disetujui ? 'disetujui' : 'ditolak';
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Izin $label'), backgroundColor: AppTheme.primary));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const GeoAppBar(title: 'Verifikasi Izin', showBack: false),
-      body: Column(
-        children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: ['Semua', 'Pending', 'Disetujui', 'Ditolak'].map((s) {
-                  final sel = _filterStatus == s;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _filterStatus = s),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: sel ? AppTheme.primary : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: sel ? AppTheme.primary : Colors.grey[300]!),
-                        ),
-                        child: Text(s,
-                            style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: sel ? Colors.white : AppTheme.textPrimary)),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _filtered.isEmpty
-                ? const Center(
-                    child: Text('Tidak ada pengajuan izin',
-                        style: TextStyle(color: AppTheme.textSecondary)))
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, i) {
-                      final izin = _filtered[i];
-                      final mhs = MockData.getMahasantriByNim(izin.nim);
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: AppTheme.primary.withOpacity(0.1),
-                                    child: Text(mhs?.nama.substring(0, 1) ?? '?',
-                                        style: const TextStyle(
-                                            color: AppTheme.primary,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14)),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(mhs?.nama ?? '-',
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w700, fontSize: 14)),
-                                        Text('${mhs?.nim ?? '-'} · Kamar ${mhs?.kamar ?? '-'}',
-                                            style: const TextStyle(
-                                                fontSize: 12, color: AppTheme.textSecondary)),
-                                      ],
-                                    ),
-                                  ),
-                                  StatusBadgeIzin(status: izin.statusPersetujuan),
-                                ],
-                              ),
-                              const Divider(height: 16),
-                              Row(
-                                children: [
-                                  _IzinInfoChip(label: izin.jenisIzinLabel, icon: Icons.category),
-                                  const SizedBox(width: 8),
-                                  _IzinInfoChip(
-                                      label: '${izin.tanggalIzin.day}/${izin.tanggalIzin.month}/${izin.tanggalIzin.year}',
-                                      icon: Icons.calendar_today),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(izin.alasan,
-                                  style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
-                              if (izin.statusPersetujuan == StatusPersetujuan.pending) ...[
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton.icon(
-                                        onPressed: () => _updateIzin(izin, StatusPersetujuan.ditolak),
-                                        icon: const Icon(Icons.close, size: 16),
-                                        label: const Text('Tolak'),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: AppTheme.statusTidakHadir,
-                                          side: const BorderSide(color: AppTheme.statusTidakHadir),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () => _updateIzin(izin, StatusPersetujuan.disetujui),
-                                        icon: const Icon(Icons.check, size: 16),
-                                        label: const Text('Setujui'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppTheme.statusHadir,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IzinInfoChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  const _IzinInfoChip({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: AppTheme.textSecondary),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-        ],
-      ),
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// REKAP TAB
+// REKAP TAB (tetap di home_musyrif karena bergantung pada _currentIndex)
 // ══════════════════════════════════════════════════════════════════════════════
 class _RekapTab extends StatefulWidget {
   final String idMusyrif;
@@ -767,7 +415,7 @@ class _RekapTabState extends State<_RekapTab> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withOpacity(0.05),
+                            color: AppTheme.primary.withValues(alpha: 0.05),
                             borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
                           ),
                           child: const Row(
