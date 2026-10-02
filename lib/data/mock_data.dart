@@ -97,6 +97,70 @@ class MockData {
     Izin(idIzin: 'IZ007', nim: '220101007', idMusyrif: 'M003', jenisIzin: JenisIzin.sakit,       tanggalIzin: DateTime.now(),                                   alasan: 'Demam tinggi, sudah ke klinik pesantren', statusPersetujuan: StatusPersetujuan.pending),
   ];
 
+  // ── MUTASI DATA REAL-TIME ─────────────────────────────────────────────────
+
+  /// Menambahkan atau memperbarui data presensi.
+  /// Jika record dengan [nim] + [idJadwal] pada hari yang sama sudah ada,
+  /// data lama diganti (update). Jika belum ada, ditambahkan ke awal list.
+  /// Mengembalikan objek [Presensi] yang disimpan.
+  static Presensi simpanPresensi({
+    required String nim,
+    required String idJadwal,
+    required String idMasjid,
+    required DateTime waktuPresensi,
+    required double latitudeUser,
+    required double longitudeUser,
+    required StatusPresensi statusPresensi,
+    String? idPresensiOverride,
+  }) {
+    // Cari apakah sudah ada record untuk NIM + jadwal + hari yang sama
+    final existingIndex = presensi.indexWhere((p) =>
+        p.nim == nim &&
+        p.idJadwal == idJadwal &&
+        p.waktuPresensi.year == waktuPresensi.year &&
+        p.waktuPresensi.month == waktuPresensi.month &&
+        p.waktuPresensi.day == waktuPresensi.day);
+
+    final id = idPresensiOverride ??
+        (existingIndex != -1
+            ? presensi[existingIndex].idPresensi
+            : 'PR${DateTime.now().millisecondsSinceEpoch}');
+
+    final newPresensi = Presensi(
+      idPresensi: id,
+      nim: nim,
+      idJadwal: idJadwal,
+      idMasjid: idMasjid,
+      waktuPresensi: waktuPresensi,
+      latitudeUser: latitudeUser,
+      longitudeUser: longitudeUser,
+      statusPresensi: statusPresensi,
+    );
+
+    if (existingIndex != -1) {
+      presensi[existingIndex] = newPresensi; // update in-place
+    } else {
+      presensi.insert(0, newPresensi); // tambah ke awal agar tampil terbaru
+    }
+    return newPresensi;
+  }
+
+  /// Mengubah status persetujuan izin berdasarkan [idIzin].
+  /// Mengembalikan `true` jika berhasil, `false` jika id tidak ditemukan.
+  static bool updateStatusIzin(String idIzin, StatusPersetujuan status) {
+    final index = izin.indexWhere((i) => i.idIzin == idIzin);
+    if (index != -1) {
+      izin[index].statusPersetujuan = status;
+      return true;
+    }
+    return false;
+  }
+
+  /// Menambahkan pengajuan izin baru ke awal list.
+  static void tambahIzin(Izin newIzin) {
+    izin.insert(0, newIzin);
+  }
+
   // ── HELPERS ───────────────────────────────────────────────────────────────
   static Mahasantri? getMahasantriByNim(String nim) {
     try {

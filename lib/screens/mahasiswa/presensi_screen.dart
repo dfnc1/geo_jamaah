@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/mock_data.dart';
+import '../../models/presensi.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 
@@ -32,22 +33,38 @@ class _PresensiScreenState extends State<PresensiScreen> {
       return;
     }
     setState(() => _phase = 'loading');
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
 
-    final jarak = (DateTime.now().millisecond % 150).toDouble();
+    // Simulasi jarak: acak antara 10–140 meter untuk demo prototype
+    final jarak = (DateTime.now().millisecond % 140 + 10).toDouble();
     final lokasiOk = jarak <= MockData.masjid.radiusToleransi;
     const waktuOk = true;
+    final berhasil = lokasiOk && waktuOk;
+
+    // Mutasi data real-time: simpan ke MockData.presensi
+    MockData.simpanPresensi(
+      nim: widget.nim,
+      idJadwal: _selectedSholat!,
+      idMasjid: MockData.masjid.idMasjid,
+      waktuPresensi: DateTime.now(),
+      latitudeUser: MockData.masjid.latitude,
+      longitudeUser: MockData.masjid.longitude,
+      statusPresensi: berhasil ? StatusPresensi.hadir : StatusPresensi.tidakHadir,
+    );
 
     setState(() {
       _phase = 'result';
       _jarakMeter = jarak;
       _lokasiValid = lokasiOk;
       _waktuValid = waktuOk;
-      _resultMsg = lokasiOk
+      _resultMsg = berhasil
           ? 'Presensi berhasil! Status Hadir tercatat.'
           : 'Anda berada di luar radius masjid. Presensi ditolak.';
     });
+
+    // Notify parent (home_screen) agar beranda di-refresh
+    widget.onPresensiSuccess?.call();
   }
 
   @override

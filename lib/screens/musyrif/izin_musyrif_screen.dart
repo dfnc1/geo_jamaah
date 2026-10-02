@@ -31,7 +31,10 @@ class _IzinMusyrifScreenState extends State<IzinMusyrifScreen> {
   }
 
   void _updateIzin(Izin izin, StatusPersetujuan status) {
-    setState(() => izin.statusPersetujuan = status);
+    setState(() {
+      // Mutasi data real-time ke MockData.izin
+      MockData.updateStatusIzin(izin.idIzin, status);
+    });
     final label = status == StatusPersetujuan.disetujui ? 'disetujui' : 'ditolak';
     ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Izin $label'), backgroundColor: AppTheme.primary));
