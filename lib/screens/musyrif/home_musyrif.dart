@@ -3,6 +3,7 @@ import '../../data/mock_data.dart';
 import '../../models/pengguna.dart';
 import '../../models/presensi.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/dss_helper.dart';
 import '../../widgets/common_widgets.dart';
 import 'izin_musyrif_screen.dart';
 import 'monitoring_screen.dart';
@@ -171,6 +172,10 @@ class _MusyrifHomeScreenState extends State<MusyrifHomeScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  // ── EWS Card ───────────────────────────────────────────
+                  _EwsCard(idMusyrif: _idMusyrif),
                   const SizedBox(height: 16),
 
                   SectionTitle(
@@ -473,6 +478,299 @@ class _RekapTabState extends State<_RekapTab> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EWS CARD — Early Warning System
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Kartu EWS yang menampilkan daftar mahasantri berisiko.
+/// Mendeteksi: kehadiran < 75% atau mangkir berturut-turut ≥ 3×.
+class _EwsCard extends StatelessWidget {
+  final String idMusyrif;
+
+  const _EwsCard({required this.idMusyrif});
+
+  static const Color _colorKritis = Color(0xFFB71C1C);
+  static const Color _colorPerhatian = Color(0xFFE65100);
+
+  Color _badgeColor(HasilDss h) {
+    if (h.risikoKehadiran && h.risikoMangkirBerturut) return _colorKritis;
+    return _colorPerhatian;
+  }
+
+  void _showPanggilDialog(BuildContext context, HasilDss h) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.campaign_outlined, color: AppTheme.primary),
+            SizedBox(width: 8),
+            Text('Panggil Pembinaan', style: TextStyle(fontSize: 16)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(h.mahasantri.nama,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            const SizedBox(height: 4),
+            Text('Kamar ${h.mahasantri.kamar}',
+                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+            const SizedBox(height: 12),
+            _DialogInfoRow(
+              icon: Icons.bar_chart,
+              label: 'Kehadiran',
+              value: '${h.persenKehadiran.toStringAsFixed(0)}%',
+              valueColor:
+                  h.risikoKehadiran ? _colorKritis : AppTheme.statusHadir,
+            ),
+            const SizedBox(height: 6),
+            _DialogInfoRow(
+              icon: Icons.warning_amber_rounded,
+              label: 'Mangkir berturut',
+              value: '${h.mangkirBerturut}×',
+              valueColor:
+                  h.risikoMangkirBerturut ? _colorKritis : AppTheme.statusHadir,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _colorPerhatian.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '⚠️ ${h.deskripsiRisiko}',
+                style: const TextStyle(fontSize: 12, color: _colorPerhatian),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.primary),
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      '✅ Panggilan pembinaan untuk ${h.mahasantri.nama} tercatat.'),
+                  backgroundColor: AppTheme.statusHadir,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            icon: const Icon(Icons.send, size: 16),
+            label: const Text('Konfirmasi Panggil'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final berisiko = DssHelper.filterBerisiko(idMusyrif);
+
+    if (berisiko.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.statusHadir.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.shield_outlined,
+                    color: AppTheme.statusHadir, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Early Warning System',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 14)),
+                    SizedBox(height: 2),
+                    Text('Semua mahasantri dalam kondisi baik ✓',
+                        style: TextStyle(
+                            fontSize: 12, color: AppTheme.textSecondary)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header EWS ────────────────────────────────────────────────
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _colorKritis.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.warning_amber_rounded,
+                      color: _colorKritis, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('⚠️ Early Warning System (EWS)',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 14)),
+                      Text('${berisiko.length} mahasantri perlu perhatian',
+                          style: const TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+
+            // ── List mahasantri berisiko ───────────────────────────────────
+            ...berisiko.map(
+              (h) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: [
+                    // Avatar inisial
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor:
+                          _badgeColor(h).withValues(alpha: 0.12),
+                      child: Text(
+                        h.mahasantri.nama.substring(0, 1),
+                        style: TextStyle(
+                            color: _badgeColor(h),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Nama + keterangan risiko
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(h.mahasantri.nama,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 13)),
+                          Text(h.deskripsiRisiko,
+                              style: TextStyle(
+                                  fontSize: 11, color: _badgeColor(h))),
+                        ],
+                      ),
+                    ),
+                    // Badge label risiko
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _badgeColor(h).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: _badgeColor(h).withValues(alpha: 0.4)),
+                      ),
+                      child: Text(
+                        h.labelRisiko,
+                        style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: _badgeColor(h)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Tombol Panggil Pembinaan
+                    SizedBox(
+                      height: 30,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppTheme.primary),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 8),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () => _showPanggilDialog(context, h),
+                        child: const Text(
+                          'Panggil',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogInfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color valueColor;
+
+  const _DialogInfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppTheme.textSecondary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(label,
+              style: const TextStyle(
+                  fontSize: 13, color: AppTheme.textSecondary)),
+        ),
+        Text(value,
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: valueColor)),
+      ],
     );
   }
 }
