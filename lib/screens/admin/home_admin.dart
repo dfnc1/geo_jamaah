@@ -87,11 +87,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("Assalamu'alaikum,",
-                        style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
                     const Text('Administrator',
                         style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                     Text('GEO-JAMAAH Admin Panel',
-                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
                   ],
                 ),
               ),
@@ -235,7 +235,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               children: [
                 CircleAvatar(
                   radius: 36,
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   child: const Icon(Icons.admin_panel_settings, color: Colors.white, size: 40),
                 ),
                 const SizedBox(width: 16),
@@ -280,9 +280,9 @@ class _AdminMenuCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -366,7 +366,7 @@ class _AdminMahasantriTab extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: AppTheme.primary.withOpacity(0.1),
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                 child: Text(m.nama.substring(0, 1),
                     style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
               ),
@@ -377,7 +377,7 @@ class _AdminMahasantriTab extends StatelessWidget {
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: m.statusAktif ? AppTheme.statusHadir.withOpacity(0.1) : Colors.grey[100],
+                  color: m.statusAktif ? AppTheme.statusHadir.withValues(alpha: 0.1) : Colors.grey[100],
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(m.statusAktif ? 'Aktif' : 'Nonaktif',
@@ -421,7 +421,7 @@ class _AdminMusyrifTab extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
+                backgroundColor: const Color(0xFF1976D2).withValues(alpha: 0.1),
                 child: Text(m.nama.substring(4, 5),
                     style: const TextStyle(color: Color(0xFF1976D2), fontWeight: FontWeight.w700)),
               ),
@@ -462,7 +462,7 @@ class _AdminJadwalTab extends StatelessWidget {
                   Container(
                     width: 48, height: 48,
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.mosque, color: AppTheme.primary),
@@ -513,7 +513,7 @@ class _JadwalBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.08),
+        color: AppTheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text('$label $value',

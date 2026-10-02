@@ -87,9 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 90,
                     height: 90,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(0.4), width: 2),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
                     ),
                     child: const Icon(Icons.mosque, color: Colors.white, size: 48),
                   ),
@@ -107,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Sistem Presensi Shalat Berjamaah',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                     ),
@@ -284,9 +284,9 @@ class _DemoRoleButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Column(
             children: [
